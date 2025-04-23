@@ -70,7 +70,6 @@ async def add_vfc(session, user_id: int, vfc_order: dict):
             voltage=vfc_order['voltage'],
             vfc1=vfc_order['vfc1'],
             vfc3=vfc_order['vfc3'],
-
             engine_power = vfc_order['engine_power'],
             encoder_to_resolver_replacement = vfc_order['encoder_to_resolver_replacement'],
             prom_protocol = vfc_order['prom_protocol'],
@@ -82,38 +81,12 @@ async def add_vfc(session, user_id: int, vfc_order: dict):
             encoder_support=vfc_order['encoder_support'],
             resolver_connection=vfc_order['resolver_connection'],
             vfc_power=vfc_order['vfc_power'],
-            
-            # vfc1_model=vfc_order['vfc1_model']["Модификация"].values[0],
-            # vfc3_model=vfc_order['vfc3_model']["Модификация"].values[0],
             vfc_model_selected=vfc_order['vfc_model_selected']["Модификация"].values[0],
             distance_to_engine=vfc_order['distance_to_engine'],
             is_shielded=vfc_order['is_shielded'],
-            rmt_model=vfc_order['rmt_model']["Реакторы моторные"].values[0],
-            lpo=vfc_order['lpo']
-            # voltage=voltage,
-            # vfc1=vfc1,
-            # vfc3=vfc3,
-            # engine_power=engine_power,
-            # encoder_to_resolver_replacement=encoder_to_resolver_replacement,
-            # prom_protocol=prom_protocol,
-            # extra_IO_or_temperature_sensor=extra_IO_or_temperature_sensor,
-            # plata=plata,
-            # industrial_protocols_support=industrial_protocols_support,
-            # nominal_out_vfc_power=nominal_out_vfc_power,
-            # res_type=res_type,
-            # encoder_suppot=encoder_support,
-            # resolver_connectin=resolver_connection,
-            # vfc_power=vfc_power,
-            # encoder_support=encoder_support,
-            # resolver_connection=resolver_connection,
-            # vfc_power=vfc_power,
-            # # vfc1_model=vfc1_model,
-            # # vfc3_model=vfc3_model,
-            # vfc_model_selected=vfc_model_selected, 
-            # distance_to_engine=distance_to_engine, 
-            # is_shielded=is_shielded,
-            # rmt_model=rmt_model,
-            # lpo=lpo
+            rmt_model=vfc_order['rmt_model'],
+            lpo=vfc_order['lpo'],
+            pvv1=vfc_order['pvv1']
         )
 
         session.add(new_note)

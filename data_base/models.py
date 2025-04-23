@@ -44,6 +44,9 @@ class Note(Base):
     is_shielded: Mapped[str] = mapped_column(String, nullable=True)
     rmt_model: Mapped[str] = mapped_column(String, nullable=True)
     lpo: Mapped[str] = mapped_column(String, nullable=True)
+    pvv1: Mapped[str] = mapped_column(String, nullable=True)
+
+
     file_id: Mapped[str] = mapped_column(String, nullable=True)
     user: Mapped["User"] = relationship("User", back_populates="notes")
 

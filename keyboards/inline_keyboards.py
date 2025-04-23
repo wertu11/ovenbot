@@ -16,7 +16,7 @@ keyboard: list[list[InlineKeyboardButton]] = [
 markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 appr_button = InlineKeyboardButton(
-    text='Подтвердить корзину',
+    text='Далее',
     callback_data='yes'
 )
 disappr_button = InlineKeyboardButton(
@@ -32,14 +32,14 @@ final_markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 PE1_button = InlineKeyboardButton(
     text='ПЭ1',
-    callback_data='PE1'
+    callback_data='ПЭ1'
 )
 PE2_button = InlineKeyboardButton(
     text='ПЭ2',
-    callback_data='PE2')
+    callback_data='ПЭ2')
 PRE1_button = InlineKeyboardButton(
     text='ПРЕ1',
-    callback_data='PRE1')
+    callback_data='ПРЕ1')
 # Добавляем кнопки в клавиатуру в один ряд
 plata_keyboard: list[list[InlineKeyboardButton]] = [
     [PE1_button, PE2_button],
@@ -115,15 +115,15 @@ volt_markup = InlineKeyboardMarkup(inline_keyboard=volt_keyboard)
 
 lpo1_button = InlineKeyboardButton(
     text='ЛПО1',
-    callback_data='lpo1'
+    callback_data='ЛПО1'
 )
 lpo2_button = InlineKeyboardButton(
     text='ЛПО2',
-    callback_data='lpo2'
+    callback_data='ЛПО2'
 )
 lpo3_button = InlineKeyboardButton(
     text='ЛПО3',
-    callback_data='lpo3'
+    callback_data='ЛПО3'
 )
 no_button = InlineKeyboardButton(
     text='Панель не нужна',
@@ -140,23 +140,23 @@ lpo_markup = InlineKeyboardMarkup(inline_keyboard=lpo_keyboard)
 
 Profibus = InlineKeyboardButton(
     text='Profibus',
-    callback_data='1'
+    callback_data='ПИП1'
 )
 Profinet = InlineKeyboardButton(
     text='Profinet',
-    callback_data='2'
+    callback_data='ПИП2'
 )
 CANopen = InlineKeyboardButton(
     text='CANopen',
-    callback_data='3'
+    callback_data='ПИК1'
 )
 EtherCat = InlineKeyboardButton(
     text='EtherCat',
-    callback_data='4'
+    callback_data='ПИЭ1'
 )
 Modbus = InlineKeyboardButton(
     text='Modbus TCP/IP',
-    callback_data='5'
+    callback_data='ПИЭ2'
 )
 # Добавляем кнопки в клавиатуру в один ряд
 encoders_keyboard: list[list[InlineKeyboardButton]] = [

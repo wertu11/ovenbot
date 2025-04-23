@@ -122,7 +122,7 @@ async def warning_not_gender(message: Message):
 
 @vfc_selection.callback_query(StateFilter(FSMEquipmentSelection.state_1),
                    F.data.in_(['yes', 'no', 'pass']))
-async def process_gender_press(callback: CallbackQuery, state: FSMContext):
+async def start(callback: CallbackQuery, state: FSMContext):
     # Cохраняем пол (callback.data нажатой кнопки) в хранилище,
     # по ключу "gender"
     print('state_1')
@@ -144,21 +144,24 @@ async def process_gender_press(callback: CallbackQuery, state: FSMContext):
     await state.update_data(distance_to_engine=None)
     await state.update_data(is_shielded=None)
     await state.update_data(rmt_model=None)
-    await state.update_data(lpo=None)
-
+    await state.update_data(lpo='')
+    await state.update_data(rb1400=0)
+    await state.update_data(rb1080=0)
+    await state.update_data(rb3=None)
     await state.update_data(voltage=callback.data)
     print(callback.data)
     await state.update_data(vfc1=True)
     await state.update_data(vfc3=False)
+    await state.update_data(pvv1=False)
 
     if callback.data == 'yes':
         # await callback.message.answer("Какой номинальный ток двигателя?", reply_markup=keyboard)
         # Отправляем в чат сообщение о выходе из машины состояний
         await callback.message.answer(
-            text='''Невозможно использование доп. плат расширения:
-для подключения устройства с протоколом Profibus, Profinet, CANopen, EtherCat, 
-Modbus TCP/IP; для подключения резольвера; для подключения энкодера;
-для входов и выходов.'''
+            text='''Невозможно использование доп. плат расширения для:
+подключения устройства с протоколом Profibus, Profinet, CANopen, EtherCat, Modbus TCP/IP; 
+подключения резольвера; для подключения энкодера;
+входов и выходов.'''
         )
         await callback.message.answer(
             text='Питание двигателя 1х220В или 3х220В?',
@@ -188,31 +191,18 @@ Modbus TCP/IP; для подключения резольвера; для под
 
 @vfc_selection.callback_query(StateFilter(FSMEquipmentSelection.state_4),
                    F.data.in_(['1х220В', '3х220В']))
-async def process_gender_press(callback: CallbackQuery, state: FSMContext):
+async def engine_power(callback: CallbackQuery, state: FSMContext):
     print('state_4')
-
-    # Cохраняем пол (callback.data нажатой кнопки) в хранилище,
-    # по ключу "gender"
     await state.update_data(engine_power=callback.data)
     print(callback.data)
-
-    # await callback.message.answer(
-    #     text='Чтобы посмотреть данные '
-    #         'подбора - отправьте команду /showdata'
-    # )
-
-    # await callback.answer()
     user_dict[callback.from_user.id] = await state.get_data()
-    # Завершаем машину состояний
-    # await state.clear()
-    await callback.message.answer(text='Теперь введите номинальный ток двигателя (указан на шильдике двигателя)')
+
+    await callback.message.answer(text='Теперь введите номинальный ток двигателя. Он указан на шильдике двигателя (необходимо указать только целое число)')
     await state.set_state(FSMEquipmentSelection.state_23)
 
 @vfc_selection.callback_query(StateFilter(FSMEquipmentSelection.state_5),
                    F.data.in_(['yes', 'no']))
-async def process_gender_press(callback: CallbackQuery, state: FSMContext):
-    # Cохраняем пол (callback.data нажатой кнопки) в хранилище,
-    # по ключу "gender"
+async def encoder_support(callback: CallbackQuery, state: FSMContext):
     print('state_5')
     
     await state.update_data(encoder_support=callback.data)
@@ -260,9 +250,8 @@ async def warning_not_gender(message: Message):
 
 @vfc_selection.callback_query(StateFilter(FSMEquipmentSelection.state_7),
                    F.data.in_(['yes', 'no']))
-async def process_gender_press(callback: CallbackQuery, state: FSMContext):
-    # Cохраняем пол (callback.data нажатой кнопки) в хранилище,
-    # по ключу "gender"
+async def enc2res_replacement(callback: CallbackQuery, state: FSMContext):
+
     print('state_7')
 
     await state.update_data(encoder_to_resolver_replacement=callback.data)
@@ -297,24 +286,23 @@ async def process_gender_press(callback: CallbackQuery, state: FSMContext):
 @vfc_selection.message(StateFilter(FSMEquipmentSelection.state_7))
 async def warning_not_gender(message: Message):
     print('state_7')
-
     await message.answer(
         text='Пожалуйста, пользуйтесь кнопками '
              '\n\nЕсли вы хотите прервать '
              'подбор - отправьте команду /cancel'
     )
 
+# @vfc_selection.message(F.text == '1' or F.text == '2' or F.text == '3' or F.text == '4' or F.text == '5')
 @vfc_selection.callback_query(StateFilter(FSMEquipmentSelection.state_prot_select),
-                   F.data.in_(['1', '2', '3', '4', '5']))
-async def process_gender_press(callback: CallbackQuery, state: FSMContext):
-    # Cохраняем пол (callback.data нажатой кнопки) в хранилище,
-    # по ключу "gender"
+                   F.data.in_(['ПИП1', 'ПИП2', 'ПИЭ1', 'ПИЭ2', 'ПИК1']))
+async def encoder_resolver_connection(callback: CallbackQuery, state: FSMContext):
     print('state_prot_select')
 
     await state.update_data(prom_protocol=callback.data)
     print(callback.data)
-    # resolver_connection = 'yes'
-
+    await callback.message.answer(
+            text=f'Для подключения необходимо использовать плату {callback.data}. Она добавлена в список подобранного оборудования'
+        )
     await callback.message.answer(
             text='Требуется ли подключение энкодера/резольвера?',
             reply_markup=markup
@@ -333,11 +321,9 @@ async def warning_not_gender(message: Message):
 
 @vfc_selection.callback_query(StateFilter(FSMEquipmentSelection.state_16),
                    F.data.in_(['yes', 'no']))
-async def process_gender_press(callback: CallbackQuery, state: FSMContext):
+async def resolver_connection(callback: CallbackQuery, state: FSMContext):
     print('state_16')
 
-    # Cохраняем пол (callback.data нажатой кнопки) в хранилище,
-    # по ключу "gender"
     await state.update_data(resolver_connection=callback.data)
     print(callback.data)
     # resolver_connection = 'yes'
@@ -372,7 +358,7 @@ async def warning_not_gender(message: Message):
 
 @vfc_selection.callback_query(StateFilter(FSMEquipmentSelection.state_19),
                    F.data.in_(['yes', 'no']))
-async def process_gender_press(callback: CallbackQuery, state: FSMContext):
+async def plates_selection(callback: CallbackQuery, state: FSMContext):
 
     print('state_19')
 
@@ -384,14 +370,17 @@ async def process_gender_press(callback: CallbackQuery, state: FSMContext):
         await callback.message.answer(
             text='''Необходимо 
 использование доп. платы расширения 
-для входов и выходов.''',
+для входов и выходов, плата добавлена в набор. (ПВВ1)''',
             # reply_markup=markup
         )
+        await state.update_data(pvv1=True)
+
         # await callback.message.answer(
         #     text='Чтобы посмотреть данные '
         #         'подбора - отправьте команду /showdata'
         # )
         # await callback.answer()
+
         user_dict[callback.from_user.id] = await state.get_data()
         # Завершаем машину состояний
         # await state.clear()
@@ -418,11 +407,8 @@ async def warning_not_gender(message: Message):
 
 @vfc_selection.callback_query(StateFilter(FSMEquipmentSelection.state_21),
                    F.data.in_(['yes', 'no']))
-async def process_gender_press(callback: CallbackQuery, state: FSMContext):
+async def vfc_decision(callback: CallbackQuery, state: FSMContext):
     print('state_21')
-
-    # Cохраняем пол (callback.data нажатой кнопки) в хранилище,
-    # по ключу "gender"
     await state.update_data(resolver_connection=callback.data)
     print(callback.data)
     # resolver_connection = 'yes'
@@ -442,7 +428,7 @@ async def process_gender_press(callback: CallbackQuery, state: FSMContext):
 
 @vfc_selection.callback_query(StateFilter(FSMEquipmentSelection.state_vfc_selection),
                    F.data.in_(['vfc1', 'vfc3']))
-async def process_gender_press(callback: CallbackQuery, state: FSMContext):
+async def state_vfc_selection(callback: CallbackQuery, state: FSMContext):
     print('state_vfc_selection')
 
     user_dict[callback.from_user.id] = await state.get_data()
@@ -462,12 +448,12 @@ async def process_gender_press(callback: CallbackQuery, state: FSMContext):
     if not vfc_model['Мощность используемого электродвигателя, кВт'].values[0] >= 90:
         await state.update_data(vfc_model_selected=vfc_model)
         await callback.message.answer(
-                text='''На каком расстоянии находится ПЧВ от двигателя? (укажите только число метров)'''
+                text='''На каком расстоянии находится ПЧВ от двигателя? (укажите только целое число метров)'''
             )
         await state.set_state(FSMEquipmentSelection.state_28)
     else:
         await callback.message.answer(
-                text='''Так как выбран ПЧВ с мощностью менее 90 кВт, нет возможности использовать моторный
+                text='''Так как выбран ПЧВ с мощностью более 90 кВт, нет возможности использовать моторный
 и сетевой дроссели '''
             )
         print(vfc_model)
@@ -482,10 +468,10 @@ async def process_gender_press(callback: CallbackQuery, state: FSMContext):
         else:
             await callback.message.answer(
                 text='''Можно также приобрести выносные панели (ЛПО). Они предназначены для 
-        программирования и оперативного управления ПЧВ. Виды: 
-        однострочная и двухстрочная (с одинаковым функционалом) - ЛПО1 и ЛПО2, а также графическая 
-        (с пояснениями на русском языке) - ЛПО3. Подключаются к ПЧВ через прямой патч-корд 
-        длиной до 30 метров. Патч-корд в комплекте не идет, мы, к сожалению, его не продаем.''',
+программирования и оперативного управления ПЧВ. Виды: 
+однострочная и двухстрочная (с одинаковым функционалом) - ЛПО1 и ЛПО2, а также графическая 
+(с пояснениями на русском языке) - ЛПО3. Подключаются к ПЧВ через прямой патч-корд 
+длиной до 30 метров. Патч-корд в комплекте не идет, мы, к сожалению, его не продаем.''',
                 reply_markup=lpo_markup
             )
             await state.set_state(FSMEquipmentSelection.state_31)
@@ -495,11 +481,8 @@ async def process_gender_press(callback: CallbackQuery, state: FSMContext):
 
 @vfc_selection.callback_query(StateFilter(FSMEquipmentSelection.state_10),
                    F.data.in_(['yes', 'no']))
-async def process_gender_press(callback: CallbackQuery, state: FSMContext):
+async def extra_IO_or_temperature_sensor(callback: CallbackQuery, state: FSMContext):
     print('state_10')
-
-    # Cохраняем пол (callback.data нажатой кнопки) в хранилище,
-    # по ключу "gender"
     await state.update_data(extra_IO_or_temperature_sensor=callback.data)
     print(callback.data)
     # 
@@ -508,9 +491,10 @@ async def process_gender_press(callback: CallbackQuery, state: FSMContext):
         await callback.message.answer(
             text='''Невозможно  
 использование доп. платы расширения 
-для входов и выходов, так как для нее не 
+для входов и выходов (ПВВ1), так как для нее не 
 остается слота.'''
         )
+        
         await callback.message.answer(
             text='''Необходимо использовать доп. платы расширения 
 для подключения энкодера или резольвера. Для энкодеров есть 2 варианта плат: 
@@ -541,8 +525,8 @@ async def warning_not_gender(message: Message):
     )
 
 @vfc_selection.callback_query(StateFilter(FSMEquipmentSelection.state_11),
-                   F.data.in_(['PE1', 'PE2', 'PRE1']))
-async def process_gender_press(callback: CallbackQuery, state: FSMContext):
+                   F.data.in_(['ПЭ1', 'ПЭ2', 'ПРЕ1']))
+async def plata(callback: CallbackQuery, state: FSMContext):
     print('state_11')
     
     await state.update_data(plata=callback.data)
@@ -562,37 +546,29 @@ async def process_gender_press(callback: CallbackQuery, state: FSMContext):
 
 @vfc_selection.callback_query(StateFilter(FSMEquipmentSelection.state_13),
                    F.data.in_(['yes', 'no']))
-async def process_gender_press(callback: CallbackQuery, state: FSMContext):
+async def extra_plates(callback: CallbackQuery, state: FSMContext):
     print('state_13')
 
     await state.update_data(plata=callback.data)
     print(callback.data)
-
-        # Отправляем в чат сообщение о выходе из машины состояний
     
     await callback.message.answer(
         text='''Внимание! Необходимо 
 использование доп. платы расширения 
-для входов и выходов.'''
+для входов и выходов, плата добавлена в набор. (ПВВ1)'''
     )
-    # await callback.message.answer(
-    #     text='Чтобы посмотреть данные '
-    #         'подбора - отправьте команду /showdata'
-    # )
-    # await callback.answer()
+    await state.update_data(pvv1=True)
+
     user_dict[callback.from_user.id] = await state.get_data()
-    # Завершаем машину состояний
-    # await state.clear()
+
     await callback.message.answer(text='Теперь введите номинальный ток двигателя (указан на шильдике двигателя)')
     await state.set_state(FSMEquipmentSelection.state_23)
-        # await state.set_state(FSMEquipmentSelection.model_selection)
-        # await state.set_state(FSMEquipmentSelection.model_selection)
 
     await callback.answer()
 
 @vfc_selection.callback_query(StateFilter(FSMEquipmentSelection.state_18),
-                   F.data.in_(['PE1', 'PE2', 'PRE1']))
-async def process_gender_press(callback: CallbackQuery, state: FSMContext):
+                   F.data.in_(['ПЭ1', 'ПЭ2', 'ПРЕ1']))
+async def extra_IO(callback: CallbackQuery, state: FSMContext):
     print('state_18')
 
     await state.update_data(plata=callback.data)
@@ -620,7 +596,7 @@ async def warning_not_gender(message: Message):
 
 @vfc_selection.callback_query(StateFilter(FSMEquipmentSelection.state_14),
                    F.data.in_(['yes', 'no']))
-async def process_gender_press(callback: CallbackQuery, state: FSMContext):
+async def industrial_protocols_support(callback: CallbackQuery, state: FSMContext):
     print('state_14')
 
     await state.update_data(industrial_protocols_support=callback.data)
@@ -631,14 +607,10 @@ async def process_gender_press(callback: CallbackQuery, state: FSMContext):
         await callback.message.answer(
             text='''Внимание! Необходимо 
 использов-я доп. платы расширения 
-для входов и выходов.'''
+для входов и выходов, плата добавлена в набор. (ПВВ1)'''
         )
-        # await callback.message.answer(
-        #     text='Чтобы посмотреть данные '
-        #         'подбора - отправьте команду /showdata'
-        # )
-        
-        # await callback.answer()
+        await state.update_data(pvv1=True)
+
         user_dict[callback.from_user.id] = await state.get_data()
         # Завершаем машину состояний
         # await state.clear()
@@ -649,13 +621,7 @@ async def process_gender_press(callback: CallbackQuery, state: FSMContext):
         
         # await state.set_state(FSMEquipmentSelection.model_selection)
     elif callback.data == 'no':
-        # тут еще надо обработку контроля обрыва ремня привода без датчика
-        # Отправляем в чат сообщение о выходе из машины состояний
-        # await callback.message.answer(
-        #     text='Чтобы посмотреть данные '
-        #         'подбора - отправьте команду /showdata'
-        # )
-        # await callback.answer()
+    
         user_dict[callback.from_user.id] = await state.get_data()
         # Завершаем машину состояний
         # await state.clear()
@@ -678,11 +644,15 @@ async def process_age_sent(message: Message, state: FSMContext):
     user_dict[message.from_user.id] = await state.get_data()
 
     await message.answer(
-        text='''Выберите ваш тип механизма\n
+        text='''Выберите ваш тип механизма и нажмите на соответствующую кнопку:\n
 1) Механизм с легким и нормальным плавным пуском, низким динамическим моментом сопротивления нагрузки
+
 2) Механизм с нагруженным плавным пуском, умеренным динамическим моментом сопротивления нагрузки           
+
 3) Механизм с нагруженным пуском, с повышенным динамическим моментом сопротивления нагрузки
+
 4) Механизм с тяжелым пуском, с большим динамическим моментом сопротивления нагрузки
+
 5) Механизм со сверхтяжелым пуском, с большим динамическим моментом сопротивления нагрузки''',
         reply_markup= moment_markup
     )
@@ -712,18 +682,24 @@ async def process_age_sentt(callback: CallbackQuery, state: FSMContext):
     total_nominal_power = float(user_dict[callback.from_user.id]['vfc_power']) * float(callback.data)
 
     vfc_engine_df = pd.read_excel('exel_files\модели ПЧВ по выходному току двигателя.xlsx')
-    if user_dict[callback.from_user.id]['voltage'] == 'yes':
-        vfc_engine_df = vfc_engine_df[vfc_engine_df['Источник питания'] == '1 фазы ~220 В']
-    else:
-        vfc_engine_df = vfc_engine_df[vfc_engine_df['Источник питания'] == '3 фазы ~380 В']
+    # if user_dict[callback.from_user.id]['voltage'] == 'yes':
+    #     vfc_engine_df = vfc_engine_df[vfc_engine_df['Источник питания'] == '1 фазы ~220 В']
+    #     print('1 phase: ', vfc_engine_df)
+    # elif user_dict[callback.from_user.id]['voltage'] == 'no':
+    #     vfc_engine_df = vfc_engine_df[vfc_engine_df['Источник питания'] == '3 фазы ~380 В']
+    #     print('3 phase: ', vfc_engine_df)
 
+
+    vfc1_engine_df = vfc_engine_df[vfc_engine_df["Модификация"].str.startswith('ПЧВ1')]
+    vfc1_model = vfc1_engine_df[vfc1_engine_df['Номинальный выходной ток, А'] >= total_nominal_power].head(1)
+    vfc3_engine_df = vfc_engine_df[vfc_engine_df["Модификация"].str.startswith('ПЧВ3')]
 
     print(user_dict[callback.from_user.id]) 
-    print(user_dict[callback.from_user.id]['vfc1'], user_dict[callback.from_user.id]['vfc3'])
+    print('decision: ', user_dict[callback.from_user.id]['vfc1'], user_dict[callback.from_user.id]['vfc3'])
     if user_dict[callback.from_user.id]['vfc1'] and user_dict[callback.from_user.id]['vfc3']:
-        vfc1_engine_df = vfc_engine_df[vfc_engine_df["Модификация"].str.startswith('ПЧВ1')]
-        vfc1_model = vfc1_engine_df[vfc1_engine_df['Номинальный выходной ток, А'] >= total_nominal_power].head(1)
-        vfc3_engine_df = vfc_engine_df[vfc_engine_df["Модификация"].str.startswith('ПЧВ3')]
+        # vfc1_engine_df = vfc_engine_df[vfc_engine_df["Модификация"].str.startswith('ПЧВ1')]
+        # vfc1_model = vfc1_engine_df[vfc1_engine_df['Номинальный выходной ток, А'] >= total_nominal_power].head(1)
+        # vfc3_engine_df = vfc_engine_df[vfc_engine_df["Модификация"].str.startswith('ПЧВ3')]
         # print(vfc_engine_df)
         vfc3_model = vfc3_engine_df[vfc3_engine_df['Номинальный выходной ток, А'] >= total_nominal_power].head(1)
         
@@ -791,20 +767,52 @@ async def process_age_sentt(callback: CallbackQuery, state: FSMContext):
     user_dict[callback.from_user.id] = await state.get_data()
     # vfc_model = user_dict[message.from_user.id]['vfc_model_selected']
     # try:
+    vfc_rmt_df = pd.read_excel('exel_files\модели ПЧВ и моторные дроссели.xlsx')
+    distance_df = pd.read_excel('exel_files\Длины кабелей.xlsx')
+
+    # print()
+
+    
+
+    print('vfc_rmt_df: ', vfc_rmt_df)
+
+    rmt_model = vfc_rmt_df[vfc_rmt_df['Модификация'] == vfc_model['Модификация'].values[0]]
+    print(rmt_model)
+    distance = user_dict[callback.from_user.id]['distance_to_engine']
+    is_shielded = user_dict[callback.from_user.id]['is_shielded']
+
+    vfc_max_distance = distance_df[distance_df['Мощность ПЧВ'] <= vfc_model['Мощность используемого электродвигателя, кВт'].values[0]].tail(1)
+        
+    if user_dict[callback.from_user.id]['engine_power'] == '3х220В':
+        vfc_rmt_df = vfc_rmt_df[vfc_rmt_df['Реакторы моторные'].str.startswith('РМТ')]
+    elif user_dict[callback.from_user.id]['engine_power'] == '1х220В':
+        vfc_rmt_df = vfc_rmt_df[vfc_rmt_df['Реакторы моторные'].str.startswith('РМО')]
+        print(rmt_model)
+        await state.update_data(rmt_model=rmt_model)
+
+        await callback.message.answer(
+                text=f'Необходимо применение моторного дросселя следующей модели: {rmt_model["Реакторы моторные"].values[0]}, он добавлен в список необходимых устройств. Максимальная длина в метрах с применением дросселя: {vfc_max_distance["Экранированный с применением моторного дросселя, м"].values[0]}')
+        await callback.message.answer(
+                    text=f'Есть необходимость в тормозном резисторе? (продолжительность включения составляет 10%)',
+                    reply_markup = markup
+                )
+        await state.set_state(FSMEquipmentSelection.state_30)
+
     if not vfc_model['Мощность используемого электродвигателя, кВт'].values[0] >= 90:
         await state.update_data(vfc_model_selected=vfc_model)
-        await callback.message.answer(
-                text='''На каком расстоянии находится ПЧВ от двигателя? (укажите только число метров)'''
-            )
-        await state.set_state(FSMEquipmentSelection.state_28)
+        if user_dict[callback.from_user.id]['engine_power'] != '1х220В':
+            await callback.message.answer(
+                    text='''На каком расстоянии находится ПЧВ от двигателя? (укажите только число метров)'''
+                )
+            await state.set_state(FSMEquipmentSelection.state_28)
     else:
         await callback.message.answer(
-                text='''Так как выбран ПЧВ с мощностью менее 90 кВт, нет возможности использовать моторный
+                text='''Так как выбран ПЧВ с мощностью более 90 кВт, нет возможности использовать моторный
 и сетевой дроссели '''
             )
         print(vfc_model)
         
-        if vfc_model['Мощность используемого электродвигателя, кВт'].values[0] < 30:
+        if vfc_model['Мощность используемого электродвигателя, кВт'].values[0] < 30 and user_dict[callback.from_user.id]['engine_power'] != '1х220В':
             await callback.message.answer(
                     text=f'Есть необходимость в тормозном резисторе? (продолжительность включения составляет 10%)',
                     reply_markup = markup
@@ -863,7 +871,7 @@ async def warning_not_gender(message: Message):
 
 @vfc_selection.callback_query(StateFilter(FSMEquipmentSelection.state_29),
                    F.data.in_(['yes', 'no']))
-async def process_gender_press(callback: CallbackQuery, state: FSMContext):
+async def is_shielded(callback: CallbackQuery, state: FSMContext):
     print('state_29')
 
     await state.update_data(is_shielded=callback.data)
@@ -875,6 +883,15 @@ async def process_gender_press(callback: CallbackQuery, state: FSMContext):
     
     vfc_rmt_df = pd.read_excel('exel_files\модели ПЧВ и моторные дроссели.xlsx')
     distance_df = pd.read_excel('exel_files\Длины кабелей.xlsx')
+
+    # print()
+
+    if user_dict[callback.from_user.id]['engine_power'] == '3х220В':
+        vfc_rmt_df = vfc_rmt_df[vfc_rmt_df['Реакторы моторные'].str.startswith('РМТ')]
+    elif user_dict[callback.from_user.id]['engine_power'] == '1х220В':
+        vfc_rmt_df = vfc_rmt_df[vfc_rmt_df['Реакторы моторные'].str.startswith('РМО')]
+
+    print('vfc_rmt_df: ', vfc_rmt_df)
 
     rmt_model = vfc_rmt_df[vfc_rmt_df['Модификация'] == vfc_model['Модификация'].values[0]]
     print(rmt_model)
@@ -891,19 +908,19 @@ async def process_gender_press(callback: CallbackQuery, state: FSMContext):
         print(distance, vfc_max_distance['Неэкранированный кабель, м'].values[0])
         print(type(distance), type(vfc_max_distance['Неэкранированный кабель, м'].values[0]))
         if is_shielded == 'да':
-            if 'ПЧВ1' in vfc_model['Модификация'].values[0] or float(distance) >= vfc_max_distance['Экранированный кабель, м'].values[0]:
+            if 'ПЧВ1' in vfc_model['Модификация'].values[0] or float(distance) >= vfc_max_distance['Экранированный кабель, м'].values[0] or user_dict[callback.from_user.id]['engine_power'] == '1х220В':
                 await callback.message.answer(
-                text=f'Необходимо применение моторного дросселя следующей модели: {rmt_model["Реакторы моторные"].values[0]}')
+                text=f'Необходимо применение моторного дросселя следующей модели: {rmt_model["Реакторы моторные"].values[0]}, он добавлен в список необходимых устройств. Максимальная длина в метрах с применением дросселя: {vfc_max_distance["Экранированный с применением моторного дросселя, м"].values[0]}')
             else:
                 await callback.message.answer(
-                text=f'Для улучшения качества работы и долговечности можно также приобрести моторный дроссель следующей модели: {rmt_model["Реакторы моторные"].values[0]}')
+                text=f'Для улучшения качества работы и долговечности можно также приобрести моторный дроссель следующей модели: {rmt_model["Реакторы моторные"].values[0]}, он добавлен в список необходимых устройств. Максимальная длина в метрах с применением дросселя: {vfc_max_distance["Экранированный с применением моторного дросселя, м"].values[0]}')
         else:
-            if 'ПЧВ1' in vfc_model['Модификация'].values[0] or float(distance) >= vfc_max_distance['Неэкранированный кабель, м'].values[0]:
+            if 'ПЧВ1' in vfc_model['Модификация'].values[0] or float(distance) >= vfc_max_distance['Неэкранированный кабель, м'].values[0] or user_dict[callback.from_user.id]['engine_power'] == '1х220В':
                 await callback.message.answer(
-                text=f'Необходимо применение моторного дросселя следующей модели: {rmt_model["Реакторы моторные"].values[0]}')
+                text=f'Необходимо применение моторного дросселя следующей модели: {rmt_model["Реакторы моторные"].values[0]}, он добавлен в список необходимых устройств. Максимальная длина в метрах с применением дросселя: {vfc_max_distance["Неэкранированный с применением моторного дросселя, м"].values[0]}')
             else:
                 await callback.message.answer(
-                text=f'Для улучшения качества работы и долговечности можно также приобрести моторный дроссель следующей модели: {rmt_model["Реакторы моторные"].values[0]}')
+                text=f'Для улучшения качества работы и долговечности можно также приобрести моторный дроссель следующей модели: {rmt_model["Реакторы моторные"].values[0]}, он добавлен в список необходимых устройств. Максимальная длина в метрах с применением дросселя: {vfc_max_distance["Неэкранированный с применением моторного дросселя, м"].values[0]}')
     else:
         await callback.message.answer(
                 text=f'Не нашлось подходящей модели моторного дросселя')
@@ -915,8 +932,6 @@ async def process_gender_press(callback: CallbackQuery, state: FSMContext):
                 text=f'Есть необходимость в тормозном резисторе? (продолжительность включения составляет 10%)',
                 reply_markup = markup
             )
-        
-    
         await state.set_state(FSMEquipmentSelection.state_30)
     else:
         await callback.message.answer(
@@ -941,7 +956,7 @@ async def warning_not_gender(message: Message):
 
 @vfc_selection.callback_query(StateFilter(FSMEquipmentSelection.state_30),
                    F.data.in_(['yes', 'no']))
-async def process_gender_press(callback: CallbackQuery, state: FSMContext):
+async def need_resistor(callback: CallbackQuery, state: FSMContext):
     print('state_30')
 
     await state.update_data(need_resistor=callback.data)
@@ -961,44 +976,49 @@ async def process_gender_press(callback: CallbackQuery, state: FSMContext):
     if callback.data == 'yes':
         print()
         if 'ПЧВ1' in vfc_model['Модификация'].values[0]:
-            # await callback.message.answer('РБ1-400-К20: ' + str(vfc1_res_df[vfc1_res_df['Модификация ПЧВ'] == vfc_model['Модификация'].values[0]]['РБ1-400-К20'].values[0]) + ' шт.')
-            # await callback.message.answer('РБ1-080-1К0: ' + str(vfc1_res_df[vfc1_res_df['Модификация ПЧВ'] == vfc_model['Модификация'].values[0]]['РБ1-080-1К0'].values[0]) + ' шт.')
-            
             rb1400 = vfc1_res_df[vfc1_res_df['Модификация ПЧВ'] == vfc_model['Модификация'].values[0]]['РБ1-400-К20']
             rb1080 = vfc1_res_df[vfc1_res_df['Модификация ПЧВ'] == vfc_model['Модификация'].values[0]]['РБ1-080-1К0']
             rb3 = vfc1_res_df[vfc1_res_df['Модификация ПЧВ'] == vfc_model['Модификация'].values[0]]['Модель РБ3']
 
             if (not rb1400.empty or not rb1400.empty or not rb3.empty) and vfc_model['Мощность используемого электродвигателя, кВт'].values[0] < 30:
 
-                # if vfc_model['Мощность используемого электродвигателя, кВт'].values[0] > 30 and callback.data == 'yes':
-    
-
                 rb1400 = rb1400.values
                 rb1080 = rb1080.values
+                await state.update_data(rb3=rb3)
                 rb3 = rb3.values[0]
 
                 await callback.message.answer('Подобранные тормозные резисторы:')    
 
                 print(rb1400)
                 if len(rb1400) != 0 and rb1400[0] != 0:
-                    await callback.message.answer('РБ1-400-К20: ' + str(rb1400[0]) + ' шт.')
+                    await state.update_data(rb1400=rb1400[0])
+                    await callback.message.answer('РБ1-400-К20: ' + str(rb1400[0]) + ' шт. (для ПЧВ1 должны подключаться последовательно)')
                 print(rb1080)
                 if len(rb1080) != 0 and rb1080[0] != 0:
-                    await callback.message.answer('РБ1-080-1К0: ' + str(rb1080[0]) + ' шт.')
+                    await state.update_data(rb1080=rb1080[0])
+                    await callback.message.answer('РБ1-080-1К0: ' + str(rb1080[0]) + ' шт. (для ПЧВ1 должны подключаться последовательно)')
 
-                if (len(rb1400) != 0 and rb1400[0] != 0) or (len(rb1080) != 0 and rb1080[0] != 0):
-                    await callback.message.answer('Резисторы серии РБ1 для ПЧВ1 должны подключаться последовательно')
+                # if (len(rb1400) != 0 and rb1400[0] != 0) or (len(rb1080) != 0 and rb1080[0] != 0):
+                #     await callback.message.answer('Резисторы серии РБ1 для ПЧВ1 должны подключаться последовательно')
                 if len(rb3) != 0:
                     await callback.message.answer(rb3)
-
+                    
                     await callback.message.answer(
                         text='''Выберите пожалуйста тип тормозных резисторов''',
                         reply_markup=rb_markup
                     )
+                    await state.set_state(FSMEquipmentSelection.state_select_res)
             else:
                 await callback.message.answer('Для установки тормозного резистора будет необходимо дополнительно установить тормозной модуль. (нет в ассортименте)')
-
-                # await callback.message.answer('К сожалению, для заданных параметров не нашлось подходящих резисторов')    
+                await callback.message.answer(
+                    text='''Можно также приобрести выносные панели (ЛПО). Они предназначены для 
+            программирования и оперативного управления ПЧВ. Виды: 
+            однострочная и двухстрочная (с одинаковым функционалом) - ЛПО1 и ЛПО2, а также графическая 
+            (с пояснениями на русском языке) - ЛПО3. Подключаются к ПЧВ через прямой патч-корд 
+            длиной до 30 метров. Патч-корд в комплекте не идет, мы, к сожалению, его не продаем.''',
+                    reply_markup=lpo_markup
+                )
+                await state.set_state(FSMEquipmentSelection.state_31)
 
             await state.set_state(FSMEquipmentSelection.state_select_res)
 
@@ -1012,17 +1032,32 @@ async def process_gender_press(callback: CallbackQuery, state: FSMContext):
 
                 rb1400 = rb1400.values
                 rb1080 = rb1080.values
+                # await state.update_data(rb1400='')
+                # await state.update_data(rb1080='')
                 await callback.message.answer('Подобранные тормозные резисторы:')    
                 
                 print(rb1400)
                 if len(rb1400) != 0 and rb1400[0] != 0:
+                    await state.update_data(rb1400=rb1400[0])
                     await callback.message.answer('РБ1-400-К20: ' + str(rb1400[0]) + ' шт.')
                 print(rb1080)
                 if len(rb1080) != 0 and rb1080[0] != 0:
+                    await state.update_data(rb1080=rb1080[0])
                     await callback.message.answer('РБ1-080-1К0: ' + str(rb1080[0]) + ' шт.')
+                if (len(rb1080) != 0 and rb1080[0] != 0) or (len(rb1400) != 0 and rb1400[0] != 0):
+                    await callback.message.answer('Для ПЧВ1 резисторы серии РБ1 должны подключаться последовательно!')
+                    
             else:
                 await callback.message.answer('Для установки тормозного резистора будет необходимо дополнительно установить тормозной модуль. (нет в ассортименте)')
-
+                await callback.message.answer(
+                    text='''Можно также приобрести выносные панели (ЛПО). Они предназначены для 
+программирования и оперативного управления ПЧВ. Виды: 
+однострочная и двухстрочная (с одинаковым функционалом) - ЛПО1 и ЛПО2, а также графическая 
+(с пояснениями на русском языке) - ЛПО3. Подключаются к ПЧВ через прямой патч-корд 
+длиной до 30 метров. Патч-корд в комплекте не идет, мы, к сожалению, его не продаем.''',
+                    reply_markup=lpo_markup
+                )
+            await state.set_state(FSMEquipmentSelection.state_31)
                 # await callback.message.answer('К сожалению, для заданных параметров не нашлось подходящих резисторов')    
 
             # if (len(rb1400) != 0 and rb1400[0] != 0) or (len(rb1080) != 0 and rb1080[0] != 0):
@@ -1061,7 +1096,7 @@ async def warning_not_gender(message: Message):
 
 @vfc_selection.callback_query(StateFilter(FSMEquipmentSelection.state_select_res),
                    F.data.in_(['RB1', 'RB3']))
-async def process_gender_press(callback: CallbackQuery, state: FSMContext):
+async def state_select_res(callback: CallbackQuery, state: FSMContext):
     print('state_select_res')
 
     await state.update_data(res_type=callback.data)
@@ -1080,39 +1115,81 @@ async def process_gender_press(callback: CallbackQuery, state: FSMContext):
     await state.set_state(FSMEquipmentSelection.state_31)
 
 
-
-
 @vfc_selection.callback_query(StateFilter(FSMEquipmentSelection.state_31),
-                   F.data.in_(['lpo1', 'lpo2', 'lpo3', 'no']))
+                   F.data.in_(['ЛПО1', 'ЛПО2', 'ЛПО3', 'no']))
 async def process_gender_press(callback: CallbackQuery, state: FSMContext):
     print('state_31')
-
-    # if message.from_user.id in user_dict:
-    await state.update_data(lpo=callback.data)
     user_dict[callback.from_user.id] = await state.get_data()
 
-    print(user_dict[callback.from_user.id])
+    total_order = {
+        'vfc': [user_dict[callback.from_user.id]['vfc_model_selected']["Модификация"].values[0], 1], 
+        'lpo': [callback.data, 1 if callback.data != 'no' else 0], 
+    }
+    if user_dict[callback.from_user.id]['prom_protocol']:
+        total_order['prom_plata'] = [user_dict[callback.from_user.id]['prom_protocol'],  1]
+    
+    if user_dict[callback.from_user.id]['res_type'] == 'RB3':
+        total_order['rb3'] = [user_dict[callback.from_user.id]['rb3'].values[0],  1 if user_dict[callback.from_user.id]['rb3'].values[0] else 0]
+    else:
+        total_order['rb1400'] = ['РБ1-400-К20', user_dict[callback.from_user.id]['rb1400'] * 1] 
+        total_order['rb1080'] = ['РБ1-080-1К0', user_dict[callback.from_user.id]['rb1080'] * 1] 
+
+    if user_dict[callback.from_user.id]['plata']:
+        total_order['plata'] = [str(user_dict[callback.from_user.id]['plata']), 1] 
+
+    if user_dict[callback.from_user.id]['pvv1']:
+        total_order['pvv1'] = ['ПВВ1', 1] 
+
+    # if not user_dict[callback.from_user.id]['rmt_model'] is None:
+    try:
+        total_order['rmt'] = [user_dict[callback.from_user.id]['rmt_model']["Реакторы моторные"].values[0], 1] 
+    except:
+        print('рмт не подобран')
+    await state.update_data(lpo=callback.data)
+    await state.update_data(total_order=total_order)
+
+    user_dict[callback.from_user.id] = await state.get_data()
+    print('final_dict: ', user_dict[callback.from_user.id])
+    print(total_order)
+    order_string = ''
+    for key, value in total_order.items():
+            if value[1] > 0:
+                order_string += str(value[0] + ' - ' + str(value[1]) + ' шт.\n')
     await callback.message.answer(
         text=f'''
-        Итого вы выбрали: 
-{user_dict[callback.from_user.id]['vfc_model_selected']["Модификация"].values[0] + ';' }
-{user_dict[callback.from_user.id]['rmt_model']["Реакторы моторные"].values[0] + ';' }
-{'ЛПО' + user_dict[callback.from_user.id]['lpo'][-1] + ';' if user_dict[callback.from_user.id]['lpo'][-1].isdigit() else ''} 
-        ''',
+        Список подобранного оборудования: 
+{order_string}'''.strip(),
         reply_markup=final_markup
     )
     await state.set_state(FSMEquipmentSelection.state_approve)
-
-    
 
 @vfc_selection.callback_query(StateFilter(FSMEquipmentSelection.state_approve),
                    F.data.in_(['yes', 'no']))
 async def confirm_add_note(callback: CallbackQuery, state: FSMContext):
     if callback.data == 'yes':
         vfc_order = user_dict[callback.from_user.id]
-        print('vfc_order: ', vfc_order)
+        total_order = user_dict[callback.from_user.id]['total_order']
+        print('total_order: ', total_order)
+        art_df = pd.read_excel(r"C:\Users\Admin\Desktop\ovenbot\exel_files\total_prod.xlsx")
+        add_link = ''
+        for key, value in total_order.items():
+            if value[1] > 0:
+                print(value, art_df[art_df['Наименование рабочее'] == value[0]])
+                add_link += str(art_df[art_df['Наименование рабочее'] == value[0]]['Артикул'].values[0])
+                add_link += str('_' + str(value[1]) + ';')
+        print(add_link)
+        link = f'https://owen.ru/upl_files/tests/cart_interface/cart.php?prods={add_link}'
+        print('link:', link)
+        # link = 'https://owen.ru/upl_files/tests/cart_interface/cart.php?prods=54214_2;108193_3;131651_5;'
+        try:
+            vfc_order['rmt_model'] = vfc_order['rmt_model']["Реакторы моторные"].values[0]
+        except:
+            print('отсутствует рмт')
         await add_vfc(user_id=callback.from_user.id, vfc_order=vfc_order)
-        await callback.message.answer('Заказ успешно зарегестрирован!', reply_markup=main_kb())
+        await callback.message.answer(f'''Заказ успешно зарегестрирован!
+<a href="{link}">Ссылка на ваш заказ</a>''', 
+        disable_web_page_preview=True, parse_mode="HTML",
+        reply_markup=main_kb())
         await state.clear()
     else:
         await callback.message.answer(
