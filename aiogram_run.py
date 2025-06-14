@@ -3,8 +3,6 @@ from create_bot import bot, dp, admins
 from data_base.base import create_tables
 from handlers.note.vfc_selection import vfc_selection
 # from handlers.note.find_note_router import find_note_router
-from handlers.note.upd_note_router import upd_note_router
-from handlers.note.add_note_router import add_note_router
 from aiogram.types import BotCommand, BotCommandScopeDefault
 
 from handlers.start_router import start_router
@@ -42,10 +40,10 @@ async def stop_bot():
 async def main():
     # регистрация роутеров
     dp.include_router(start_router)
-    dp.include_router(add_note_router)
+    # dp.include_router(add_note_router)
     dp.include_router(vfc_selection)
     # dp.include_router(find_note_router)
-    dp.include_router(upd_note_router)
+    # dp.include_router(upd_note_router)
 
     # регистрация функций
     dp.startup.register(start_bot)
