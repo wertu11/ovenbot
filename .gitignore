@@ -14,7 +14,7 @@ __pycache__/
 **/.idea/
 
 # Игнорирование новых записей в папке exel_files
-exel_files/
+# exel_files/
 
 db.sqlite3
 
