@@ -52,13 +52,6 @@ async def add_note(session, user_id: int, content_type: str,
 
 @connection
 async def add_vfc(session, user_id: int, vfc_order: dict):
-                #   voltage: str, vfc1: bool, vfc3: bool, 
-                #   encoder_support: str, resolver_connection: str, vfc_power: str, 
-                #   engine_power: str, encoder_to_resolver_replacement: str, prom_protocol: str, 
-                #   extra_IO_or_temperature_sensor: str, plata: str, industrial_protocols_support: str, 
-                #   nominal_out_vfc_power: str, res_type: str, 
-                #   vfc_model_selected: str, distance_to_engine: str, is_shielded: str, 
-                #   rmt_model: str, lpo: str):
     try:
         user = await session.scalar(select(User).filter_by(id=user_id))
         if not user:
@@ -94,7 +87,7 @@ async def add_vfc(session, user_id: int, vfc_order: dict):
         logger.info(f"Подобран ПЧВ для пользователя с ID {user_id}!")
         return new_note
     except SQLAlchemyError as e:
-        logger.error(f"Ошибка при добавлении заметки: {e}")
+        logger.error(f"Ошибка при добавлении записи: {e}")
         await session.rollback()
 
 
@@ -116,74 +109,74 @@ async def update_text_note(session, note_id: int, content_text: str) -> Optional
         await session.rollback()
 
 
-@connection
-async def get_notes_by_user(session, user_id: int, date_add: str = None, text_search: str = None,
-                            content_type: str = None) -> List[Dict[str, Any]]:
-    try:
-        result = await session.execute(select(Note).filter_by(user_id=user_id))
-        notes = result.scalars().all()
+# @connection
+# async def get_notes_by_user(session, user_id: int, date_add: str = None, text_search: str = None,
+#                             content_type: str = None) -> List[Dict[str, Any]]:
+#     try:
+#         result = await session.execute(select(Note).filter_by(user_id=user_id))
+#         notes = result.scalars().all()
 
-        if not notes:
-            logger.info(f"Заметки для пользователя с ID {user_id} не найдены.")
-            return []
+#         if not notes:
+#             logger.info(f"Заметки для пользователя с ID {user_id} не найдены.")
+#             return []
 
-        note_list = [
-            {
-                'id': note.id,
-                'content_type': note.content_type,
-                'content_text': note.content_text,
-                'file_id': note.file_id,
-                'date_created': note.created_at
-            } for note in notes
-        ]
+#         note_list = [
+#             {
+#                 'id': note.id,
+#                 'content_type': note.content_type,
+#                 'content_text': note.content_text,
+#                 'file_id': note.file_id,
+#                 'date_created': note.created_at
+#             } for note in notes
+#         ]
 
-        if date_add:
-            note_list = [note for note in note_list if note['date_created'].strftime('%Y-%m-%d') == date_add]
+#         if date_add:
+#             note_list = [note for note in note_list if note['date_created'].strftime('%Y-%m-%d') == date_add]
 
-        if text_search:
-            note_list = [note for note in note_list if text_search.lower() in (note['content_text'] or '').lower()]
+#         if text_search:
+#             note_list = [note for note in note_list if text_search.lower() in (note['content_text'] or '').lower()]
 
-        if content_type:
-            note_list = [note for note in note_list if note['content_type'] == content_type]
+#         if content_type:
+#             note_list = [note for note in note_list if note['content_type'] == content_type]
 
-        return note_list
-    except SQLAlchemyError as e:
-        logger.error(f"Ошибка при получении заметок: {e}")
-        return []
-
-
-@connection
-async def get_note_by_id(session, note_id: int) -> Optional[Dict[str, Any]]:
-    try:
-        note = await session.get(Note, note_id)
-        if not note:
-            logger.info(f"Заметка с ID {note_id} не найдена.")
-            return None
-
-        return {
-            'id': note.id,
-            'content_type': note.content_type,
-            'content_text': note.content_text,
-            'file_id': note.file_id
-        }
-    except SQLAlchemyError as e:
-        logger.error(f"Ошибка при получении заметки: {e}")
-        return None
+#         return note_list
+#     except SQLAlchemyError as e:
+#         logger.error(f"Ошибка при получении заметок: {e}")
+#         return []
 
 
-@connection
-async def delete_note_by_id(session, note_id: int) -> Optional[Note]:
-    try:
-        note = await session.get(Note, note_id)
-        if not note:
-            logger.error(f"Заметка с ID {note_id} не найдена.")
-            return None
+# @connection
+# async def get_note_by_id(session, note_id: int) -> Optional[Dict[str, Any]]:
+#     try:
+#         note = await session.get(Note, note_id)
+#         if not note:
+#             logger.info(f"Заметка с ID {note_id} не найдена.")
+#             return None
 
-        await session.delete(note)
-        await session.commit()
-        logger.info(f"Заметка с ID {note_id} успешно удалена.")
-        return note
-    except SQLAlchemyError as e:
-        logger.error(f"Ошибка при удалении заметки: {e}")
-        await session.rollback()
-        return None
+#         return {
+#             'id': note.id,
+#             'content_type': note.content_type,
+#             'content_text': note.content_text,
+#             'file_id': note.file_id
+#         }
+#     except SQLAlchemyError as e:
+#         logger.error(f"Ошибка при получении заметки: {e}")
+#         return None
+
+
+# @connection
+# async def delete_note_by_id(session, note_id: int) -> Optional[Note]:
+#     try:
+#         note = await session.get(Note, note_id)
+#         if not note:
+#             logger.error(f"Заметка с ID {note_id} не найдена.")
+#             return None
+
+#         await session.delete(note)
+#         await session.commit()
+#         logger.info(f"Заметка с ID {note_id} успешно удалена.")
+#         return note
+#     except SQLAlchemyError as e:
+#         logger.error(f"Ошибка при удалении заметки: {e}")
+#         await session.rollback()
+#         return None
