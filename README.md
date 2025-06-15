@@ -54,7 +54,7 @@ venv\Scripts\activate.bat  # для Windows
 pip install -r requirements.txt
 ```
 
-2. Создайте файл `.env` с переменными окружения:
+2. Создайте файл `.env` с переменными окружения (токен бота выпускается через BotFather):
 ```env
 BOT_TOKEN=ваш_токен_бота
 ADMINS=список_администраторов (опционально)
