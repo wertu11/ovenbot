@@ -41,6 +41,14 @@ ovenbot/
 
 ## 🚀 Запуск проекта
 
+Перед запуском рекомендуется создать виртуальное окружение:
+
+```bash
+python -m venv venv
+source venv/bin/activate  # для Linux/MacOS
+venv\Scripts\activate.bat  # для Windows
+```
+
 1. Установите зависимости:
 ```bash
 pip install -r requirements.txt
