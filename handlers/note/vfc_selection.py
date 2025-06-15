@@ -18,7 +18,7 @@ from keyboards.reply_other_kb import main_kb
 vfc_selection = Router()
 
 # Создаем "базу данных" пользователей
-user_dict: dict[int, dict[str, str | int | bool]] = {}
+user_dict: dict[int, dict[str, str or int or bool]] = {}
 
 # Cоздаем класс, наследуемый от StatesGroup, для группы состояний нашей FSM
 class FSMEquipmentSelection(StatesGroup):
